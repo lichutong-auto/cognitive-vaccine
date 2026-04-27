@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>认知疫苗</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #fff; color: #1a1a1a; }
+
+/* ===== 页面容器 ===== */
+.page { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; flex-direction: column; justify-content: center; align-items: center; padding: 40px 28px; overflow-y: auto; }
+.page.active { display: flex; }
+
+/* ===== 文字 ===== */
+h1 { font-size: 22px; font-weight: 600; line-height: 1.6; text-align: center; margin-bottom: 24px; }
+h2 { font-size: 18px; font-weight: 500; line-height: 1.7; text-align: center; margin-bottom: 20px; color: #333; }
+p { font-size: 15px; line-height: 1.8; margin-bottom: 16px; text-align: center; color: #444; }
+p.fade { opacity: 0; }
+.subtle { font-size: 13px; color: #999; margin-top: 18px; }
+.tight { letter-spacing: -0.01em; }
+.sep { height: 12px; }
+
+/* ===== 按钮 ===== */
+.btn-group { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin-top: 16px; }
+.btn { display: block; width: 100%; padding: 14px 20px; border-radius: 12px; font-size: 15px; font-weight: 500; border: none; cursor: pointer; transition: all .15s; background: #f5f5f5; color: #1a1a1a; text-align: center; }
+.btn:active { transform: scale(0.97); background: #ebebeb; }
+.btn.primary { background: #1a1a1a; color: #fff; }
+.btn.primary:active { background: #333; }
+.btn.ghost { background: transparent; border: 1px solid #ddd; color: #666; }
+.btn.ghost:active { background: #f5f5f5; }
+.btn.small { font-size: 13px; padding: 10px 16px; width: auto; border-radius: 8px; }
+.btn.muted { background: transparent; border: none; color: #bbb; font-size: 13px; cursor: pointer; padding: 8px; }
+.btn.muted:active { color: #999; }
+
+/* ===== 进度 / 状态 ===== */
+.counter { font-size: 48px; font-weight: 200; margin: 24px 0; letter-spacing: 2px; }
+.counter.done { color: #2e7d32; }
+.skip-hint { position: fixed; bottom: 40px; left: 0; width: 100%; text-align: center; color: #ccc; font-size: 12px; cursor: pointer; }
+
+/* ===== 下一站选择 ===== */
+.app-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; max-width: 320px; margin: 16px 0; }
+.app-btn { background: #f5f5f5; border-radius: 10px; padding: 14px 8px; text-align: center; font-size: 14px; border: none; cursor: pointer; transition: all .15s; }
+.app-btn:active { transform: scale(0.95); background: #e8e8e8; }
+
+/* ===== 视频段模拟 ===== */
+.video-frame { width: 100%; max-width: 340px; background: #111; border-radius: 16px; padding: 40px 20px; margin: 16px 0; min-height: 240px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #eee; position: relative; }
+.video-frame .line { opacity: 0; transition: opacity .6s; font-size: 15px; line-height: 1.8; text-align: center; margin-bottom: 4px; }
+.video-frame .line.visible { opacity: 1; }
+
+/* ===== 隐藏的exit ===== */
+.exit-bar { position: fixed; top: 16px; right: 20px; color: #ccc; font-size: 13px; cursor: pointer; z-index: 10; }
+
+/* ===== 毛玻璃缩放动画 ===== */
+.fade-enter { animation: fadeIn .8s ease-out both; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.delay-1 { animation-delay: .3s; }
+.delay-2 { animation-delay: .6s; }
+.delay-3 { animation-delay: .9s; }
+.delay-4 { animation-delay: 1.2s; }
+.delay-5 { animation-delay: 1.5s; }
+.delay-6 { animation-delay: 1.8s; }
+.delay-7 { animation-delay: 2.1s; }
+
+/* ===== 打字效果 ===== */
+.typewriter { overflow: hidden; display: inline-block; animation: typing .8s steps(30, end) both; white-space: pre-wrap; }
+@keyframes typing { from { width: 0; } to { width: 100%; } }
+
+/* ===== 闪烁光标 ===== */
+.blink::after { content: '|'; animation: blink 1s step-end infinite; color: #1a1a1a; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ===== 滚动 ===== */
+.scrollable { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+/* ===== 退出文字 ===== */
+.micro-exit { position: fixed; bottom: 20px; left: 0; width: 100%; text-align: center; color: #ccc; font-size: 11px; cursor: pointer; z-index: 5; }
+</style>
+</head>
+<body>
+
+<!-- ==================== 第0页：首屏 ==================== -->
+<div id="page-0" class="page active">
+  <p class="fade-enter">你有没有过这种感觉——</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-1">明明刷了一晚上，</p>
+  <p class="fade-enter delay-1">却想不起来看了什么。</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-2">明明想停下来，</p>
+  <p class="fade-enter delay-2">手指却自己滑下去了。</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-3" style="color:#666; font-size:14px;">（停顿2秒）</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-4">这不是你的问题。</p>
+  <p class="fade-enter delay-4">这说明你的大脑是正常的。</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-5">正常的——意味着它会被设计好的信息流带走。</p>
+  <p class="fade-enter delay-5">就像手碰到烫的东西会缩回去，一样自然。</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-6" style="color:#666; font-size:14px;">（停顿）</p>
+  <p class="fade-enter delay-7" style="font-weight:500;">现在，我要你做一个选择。</p>
+  <div class="btn-group fade-enter delay-7">
+    <button class="btn primary" onclick="goTo('page-1a')">我想看看自己怎么被带走的</button>
+    <button class="btn ghost" onclick="goTo('page-1b')">我只是随便点进来的</button>
+  </div>
+</div>
+
+<!-- ==================== 第1a页：直面分支 ==================== -->
+<div id="page-1a" class="page">
+  <p class="fade-enter">好。</p>
+  <p class="fade-enter delay-1">接下来我说的每一句，都不是在批评你。</p>
+  <p class="fade-enter delay-2">因为我也一样。</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-3" style="font-weight:500; color:#1a1a1a;">我们都是被设计过的。</p>
+  <div class="sep" style="height:32px;"></div>
+  <button class="btn primary fade-enter delay-4" onclick="goTo('page-2')">继续</button>
+  <div class="micro-exit" onclick="goTo('page-end')">跳过</div>
+</div>
+
+<!-- ==================== 第1b页：随便点进来的分支 ==================== -->
+<div id="page-1b" class="page">
+  <p class="fade-enter">好，那我不留你。</p>
+  <p class="fade-enter delay-1">不过在走之前——</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-2" style="font-weight:500;">下一个你会去哪儿？</p>
+  <div class="app-grid fade-enter delay-3">
+    <button class="app-btn" onclick="showNextStop(this)">抖音</button>
+    <button class="app-btn" onclick="showNextStop(this)">哔哩哔哩</button>
+    <button class="app-btn" onclick="showNextStop(this)">小红书</button>
+    <button class="app-btn" onclick="showNextStop(this)">微信</button>
+    <button class="app-btn" onclick="showNextStop(this)">游戏</button>
+    <button class="app-btn" onclick="showNextStop(this)">其他</button>
+  </div>
+  <p id="next-stop-response" style="display:none; color:#555; font-size:14px; margin-top:8px;"></p>
+  <div class="micro-exit">你随时可以关掉这个页面</div>
+</div>
+
+<!-- ==================== 第2页：多巴胺 ==================== -->
+<div id="page-2" class="page">
+  <p class="fade-enter">聊回你刚才选的那个。</p>
+  <p class="fade-enter delay-1">抖音、B站、小红书、游戏、微信——</p>
+  <p class="fade-enter delay-2">它们的底层逻辑是一样的：</p>
+  <div class="sep"></div>
+  <div class="fade-enter delay-3" style="width:100%; max-width:320px;">
+    <p style="font-size:22px; font-weight:600; margin-bottom:4px;">它研究你。</p>
+    <p style="font-size:22px; font-weight:600; margin-bottom:4px;">研究你的喜好、你的停顿、</p>
+    <p style="font-size:22px; font-weight:600; margin-bottom:4px;">你的反感、你的兴奋点。</p>
+    <div class="sep"></div>
+    <p style="font-size:22px; font-weight:600;">然后精准地、毫秒级地、</p>
+    <p style="font-size:22px; font-weight:600; margin-bottom:20px;">不间断地——</p>
+  </div>
+  <p style="display:none;" id="page-2-reveal"></p>
+  <button class="btn primary fade-enter delay-4" onclick="revealPage2()" id="page-2-btn">点击查看</button>
+</div>
+
+<!-- ==================== 第3页：真正在发生什么 ==================== -->
+<div id="page-3" class="page">
+  <p class="fade-enter">不是喂饱你的知识。</p>
+  <p class="fade-enter delay-1" style="font-size:20px; font-weight:500; color:#c62828;">是喂饱你的多巴胺。</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-2" style="color:#666; font-size:14px;">（停顿）</p>
+  <p class="fade-enter delay-3">多巴胺本身没有错。</p>
+  <p class="fade-enter delay-4">问题是——它的阈值会越来越高。</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-5" style="font-size:14px; color:#888;">昨天让你兴奋的视频，今天已经不够了。</p>
+  <p class="fade-enter delay-6" style="font-size:14px; color:#888;">今天让你停不下来的东西，下个月你需要双倍的刺激。</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-7" style="font-weight:600; font-size:17px; color:#1a1a1a;">你的大脑不是在"放松"——</p>
+  <p class="fade-enter delay-7" style="font-weight:600; font-size:17px; color:#c62828;">它是在被"训练"。</p>
+  <div class="btn-group" style="margin-top:24px;">
+    <button class="btn primary" onclick="goTo('page-4')">继续</button>
+  </div>
+  <div class="micro-exit" onclick="goTo('page-end')">跳过</div>
+</div>
+
+<!-- ==================== 第4页：30秒倒计时 ==================== -->
+<div id="page-4" class="page" style="background:#fafafa;">
+  <p style="font-size:16px; margin-bottom:20px;">现在，我只需要你做一件事。</p>
+  <p style="font-size:14px; color:#888;">握着你的手机——</p>
+  <p style="font-size:14px; color:#888; margin-bottom:24px;">但30秒不看它。</p>
+  <div id="counter" class="counter">30</div>
+  <p style="font-size:13px; color:#bbb;" id="counter-label">30秒后自动继续</p>
+  <button class="btn primary" id="start-timer-btn" onclick="startTimer()">开始</button>
+  <div class="micro-exit" onclick="goTo('page-5')">跳过</div>
+</div>
+
+<!-- ==================== 第5页：30秒结束 ==================== -->
+<div id="page-5" class="page">
+  <p class="fade-enter" style="font-size:20px; font-weight:500;">你做到了。</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-1">这是30秒。</p>
+  <p class="fade-enter delay-2">今天剩下的23小时59分30秒——</p>
+  <p class="fade-enter delay-3" style="font-weight:500; font-size:17px;">你打算怎么过？</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-4" style="color:#666; font-size:14px;">这不是一个修辞问题。</p>
+  <p class="fade-enter delay-5" style="color:#666; font-size:14px;">它是真的在问你。</p>
+  <div class="btn-group" style="margin-top:24px;">
+    <button class="btn primary" onclick="goTo('page-6')">继续</button>
+  </div>
+  <div class="micro-exit" onclick="goTo('page-end')">跳过</div>
+</div>
+
+<!-- ==================== 第6页：元认知 ==================== -->
+<div id="page-6" class="page">
+  <p class="fade-enter">好。上面说的这些，你可能听过。</p>
+  <p class="fade-enter delay-1">但"知道"和"感受到"是两回事。</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-2">你刚才那30秒里感受到的那种</p>
+  <p class="fade-enter delay-2">"安静得有点不习惯"——</p>
+  <p class="fade-enter delay-3" style="font-weight:500;">那才是我想让你带走的。</p>
+  <div class="sep"></div>
+  <div class="fade-enter delay-4" style="background:#f5f5f5; border-radius:12px; padding:16px 20px; max-width:320px;">
+    <p style="font-size:13px; color:#999; margin-bottom:6px;">这个词你可能听过——</p>
+    <p style="font-weight:600; font-size:18px;">元认知</p>
+    <p style="font-size:13px; color:#666; margin-top:6px;">大白话：你意识到自己在想什么的能力。</p>
+  </div>
+  <div class="sep"></div>
+  <p class="fade-enter delay-5">它不是知识。它是一种肌肉。</p>
+  <p class="fade-enter delay-6" style="font-size:14px; color:#555;">每一次在刷下一个视频前，</p>
+  <p class="fade-enter delay-6" style="font-size:14px; color:#555;">能多出一秒问自己"我真的想看吗"——</p>
+  <p class="fade-enter delay-7" style="font-weight:500; font-size:16px;">你就在练这块肌肉。</p>
+  <div class="btn-group" style="margin-top:20px;">
+    <button class="btn primary" onclick="goTo('page-7')">继续</button>
+  </div>
+  <div class="micro-exit" onclick="goTo('page-end')">跳过</div>
+</div>
+
+<!-- ==================== 第7页：入口 ==================== -->
+<div id="page-7" class="page" style="justify-content:flex-start; padding-top:60px;">
+  <p class="fade-enter" style="font-size:18px; font-weight:500;">如果你想继续练这块肌肉——</p>
+  <p class="fade-enter delay-1" style="font-size:14px; color:#888; margin-bottom:20px;">我给你留了两个入口：</p>
+
+  <div class="fade-enter delay-2" style="width:100%; max-width:340px; background:#f5f5f5; border-radius:12px; padding:16px 20px; margin-bottom:12px;">
+    <p style="font-size:13px; color:#999; margin-bottom:4px;">入口 1</p>
+    <p style="font-weight:500;">《认知觉醒》——周岭</p>
+    <p style="font-size:13px; color:#666; margin-top:4px;">它的第一章，说的就是你刚感受到的东西。</p>
+  </div>
+
+  <div class="fade-enter delay-3" style="width:100%; max-width:340px; background:#f5f5f5; border-radius:12px; padding:16px 20px; margin-bottom:12px;">
+    <p style="font-size:13px; color:#999; margin-bottom:4px;">入口 2</p>
+    <p style="font-weight:500;">打开任何一个AI</p>
+    <p style="font-size:13px; color:#666; margin-top:4px;">问它："我今天被什么带走了？"</p>
+  </div>
+
+  <p class="fade-enter delay-4" style="font-size:14px; color:#888; margin-top:16px;">你不一定能立刻得到答案。</p>
+  <p class="fade-enter delay-5" style="font-size:14px; color:#888;">但你在问出这个问题的那一秒——</p>
+  <p class="fade-enter delay-6" style="font-weight:500; font-size:16px; margin-top:4px;">你已经不是被动的那个了。</p>
+
+  <div class="btn-group" style="margin-top:24px;">
+    <button class="btn primary" onclick="goTo('page-8')">继续</button>
+  </div>
+  <div class="micro-exit" onclick="goTo('page-end')">跳过</div>
+</div>
+
+<!-- ==================== 第8页：感谢 + 转发 ==================== -->
+<div id="page-8" class="page" style="justify-content:center;">
+  <p class="fade-enter" style="font-size:16px; line-height:2;">最后这段话，是有人想对你说的：</p>
+  <div class="sep"></div>
+  <div class="fade-enter delay-1" style="border-left:3px solid #1a1a1a; padding-left:18px; max-width:320px;">
+    <p style="font-size:15px; line-height:2.2;">谢谢你愿意花这几分钟。</p>
+    <p style="font-size:15px; line-height:2.2;">大多数人不会。</p>
+    <p style="font-size:15px; line-height:2.2;">你留下来了。</p>
+    <p style="font-size:15px; line-height:2.2;">你已经不一样了。</p>
+  </div>
+  <div class="sep"></div>
+  <p class="fade-enter delay-2" style="font-size:14px; color:#888;">如果你觉得这几分钟——</p>
+  <p class="fade-enter delay-3" style="font-size:14px; color:#888;">对你身边某个在乎的人也值得。</p>
+  <div class="btn-group fade-enter delay-4" style="margin-top:20px;">
+    <button class="btn primary" onclick="copyLink()" id="share-btn">把这条链接发给一个人</button>
+    <button class="btn ghost" onclick="goTo('page-9')">看看这个原型背后的故事</button>
+  </div>
+  <p class="fade-enter delay-5" style="font-size:13px; color:#bbb; margin-top:20px;">这是一次认知疫苗接种。</p>
+  <p class="fade-enter delay-5" style="font-size:13px; color:#bbb;">第一针打完了。后续怎么加强，在你手里。</p>
+  <div class="micro-exit" onclick="goTo('page-end')">我会记住的</div>
+</div>
+
+<!-- ==================== 第9页：背后的故事 ==================== -->
+<div id="page-9" class="page scrollable" style="justify-content:flex-start; padding-top:48px; overflow-y:auto;">
+  <p class="fade-enter" style="font-size:18px; font-weight:500;">这个原型背后的故事</p>
+  <div class="sep"></div>
+  <p class="fade-enter delay-1" style="font-size:14px; line-height:2; text-align:left; max-width:340px; color:#555;">这个页面是一个18岁的自动化专业学生做的。</p>
+  <p class="fade-enter delay-2" style="font-size:14px; line-height:2; text-align:left; max-width:340px; color:#555;">他花了很长时间想一个问题：</p>
+  <p class="fade-enter delay-3" style="font-size:14px; line-height:2; text-align:left; max-width:340px; font-weight:500; color:#1a1a1a;">"为什么我知道自己在被算法推着走，却还是停不下来？"</p>
+  <p class="fade-enter delay-4" style="font-size:14px; line-height:2; text-align:left; max-width:340px; color:#555;">后来他发现答案不在什么高深的理论里——</p>
+  <p class="fade-enter delay-5" style="font-size:14px; line-height:2; text-align:left; max-width:340px; color:#555;">在每个人都能感受到、但很少人说破的地方。</p>
+  <p class="fade-enter delay-6" style="font-size:14px; line-height:2; text-align:left; max-width:340px; color:#555;">这个页面的所有内容都来自他真实的思考过程。</p>
+  <p class="fade-enter delay-7" style="font-size:14px; line-height:2; text-align:left; max-width:340px; color:#555;">它不是一个产品。它是一次实验。</p>
+  <div class="sep"></div>
+  <div class="fade-enter delay-7" style="width:100%; max-width:340px; border-top:1px solid #eee; padding-top:16px; margin-top:8px;">
+    <p style="font-size:13px; color:#999; line-height:1.8;">如果你想参与这个实验的下一个版本——</p>
+    <p style="font-size:13px; color:#999; line-height:1.8;">不管是改文案、做设计、还是你也被这个想法打动——</p>
+    <p style="font-size:13px; color:#999; line-height:1.8;">这个原型的所有设计文档和代码都在：</p>
+    <p style="font-size:13px; font-weight:500; color:#1a1a1a; margin-top:8px;" id="github-link">[GitHub 仓库地址待填入]</p>
+    <p style="font-size:13px; color:#999; margin-top:8px;">欢迎fork它，改它，传播它。</p>
+  </div>
+  <div class="btn-group" style="margin-top:24px; margin-bottom:60px;">
+    <button class="btn primary" onclick="cpy('share')">复制链接，发给一个你在乎的人</button>
+    <button class="btn ghost" onclick="goTo('page-end')">我先自己消化一下</button>
+  </div>
+</div>
+
+<!-- ==================== 结束页 ==================== -->
+<div id="page-end" class="page">
+  <p class="fade-enter" style="font-size:18px;">这个页面一直在这里。</p>
+  <p class="fade-enter delay-1" style="font-size:14px; color:#888;">任何时候你想回来——</p>
+  <p class="fade-enter delay-2" style="font-size:14px; color:#888;">重新给自己那30秒。</p>
+  <div class="sep" style="height:32px;"></div>
+  <button class="btn primary fade-enter delay-3" onclick="goTo('page-0')">重新开始</button>
+</div>
+
+<!-- ==================== 隐藏的分享输入 ==================== -->
+<input type="text" id="hidden-input" style="position:fixed;left:-9999px;opacity:0;" readonly>
+
+<script>
+// ===== 页面切换 =====
+function goTo(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  // 重置任何跑着的timer
+  if (window.timerInterval) { clearInterval(window.timerInterval); window.timerInterval = null; }
+  // 滚动到顶部
+  const page = document.getElementById(id);
+  if (page) page.scrollTop = 0;
+}
+
+// ===== 下一站分支 =====
+let nextStopStep = 0;
+function showNextStop(el) {
+  const label = el.textContent;
+  const responseEl = document.getElementById('next-stop-response');
+  responseEl.style.display = 'block';
+
+  if (nextStopStep === 0) {
+    responseEl.textContent = '嗯，' + label + '也是这么设计的。只不过它用的是推荐算法，而这里用的是——一段话。两种方式，同一个目的：让你留下来。';
+    nextStopStep = 1;
+    el.parentElement.style.display = 'none';
+    // 显示"再看看"选项
+    setTimeout(() => {
+      const stayBtn = document.createElement('button');
+      stayBtn.className = 'btn primary';
+      stayBtn.textContent = '或者……再看看？';
+      stayBtn.onclick = function() { goTo('page-1a'); };
+      responseEl.after(stayBtn);
+    }, 2200);
+  }
+}
+
+// ===== 第2页揭示 =====
+function revealPage2() {
+  const btn = document.getElementById('page-2-btn');
+  btn.style.display = 'none';
+  const reveal = document.getElementById('page-2-reveal');
+  reveal.style.display = 'block';
+  reveal.innerHTML = '<div class="fade-enter" style="font-size:28px; font-weight:200; color:#1a1a1a; letter-spacing:4px;">把你喂饱。</div>';
+  setTimeout(() => { goTo('page-3'); }, 1800);
+}
+
+// ===== 30秒倒计时 =====
+let timerInterval = null;
+function startTimer() {
+  const btn = document.getElementById('start-timer-btn');
+  btn.style.display = 'none';
+  let count = 30;
+  const counterEl = document.getElementById('counter');
+  counterEl.style.color = '#1a1a1a';
+  counterEl.textContent = count;
+
+  timerInterval = setInterval(() => {
+    count--;
+    counterEl.textContent = count;
+    if (count <= 5) counterEl.style.color = '#c62828';
+    if (count <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      counterEl.textContent = '0';
+      counterEl.style.color = '#2e7d32';
+      document.getElementById('counter-label').textContent = '你做到了';
+      setTimeout(() => { goTo('page-5'); }, 1200);
+    }
+  }, 1000);
+}
+
+// ===== 复制链接 =====
+function copyLink() {
+  const url = window.location.href;
+  const input = document.getElementById('hidden-input');
+  input.value = url;
+  input.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  const btn = document.getElementById('share-btn');
+  btn.textContent = '✓ 已复制';
+  btn.classList.remove('primary');
+  btn.classList.add('ghost');
+}
+
+function cpy(type) {
+  const url = window.location.href;
+  const input = document.getElementById('hidden-input');
+  input.value = url + '?from=story';
+  input.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  // 提示
+  const btns = document.querySelectorAll('.btn.primary');
+  btns.forEach(b => { if(b.textContent.includes('复制')) { b.textContent = '✓ 已复制'; b.classList.remove('primary'); b.classList.add('ghost'); }});
+}
+</script>
+</body>
+</html>
